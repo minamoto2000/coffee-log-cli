@@ -7,10 +7,12 @@ def load_logs():
             return logs
     except FileNotFoundError:
         return []
+    except json.JSONDecodeError:
+        return[]
 
 def save_logs(logs):
     with open("logs.json", "w", encoding="utf-8") as outfile:
-        json.dump(logs, outfile)
+        json.dump(logs, outfile, indent=4, ensure_ascii=False)
 
 def make_log(bean_name, water_g, dose_g, overall_score):
     return {
@@ -23,19 +25,24 @@ def make_log(bean_name, water_g, dose_g, overall_score):
 def list_logs(logs):
     for index, log in enumerate(logs):
         print(str(1 + index) + "件目")
-        print("bean_name:", log["bean_name"])
-        print("overall_score:", log["overall_score"])
+        print("豆の名前:", log["bean_name"])
+        print("スコア(1~5点):", log["overall_score"])
         print("---------")
 
 def show_log_detail(logs, index):
-    print("bean_name:", logs[index]["bean_name"])
-    print("water_g:", logs[index]["water_g"])
-    print("dose_g:", logs[index]["dose_g"])
-    print("overall_score:", logs[index]["overall_score"])
+    print("豆の名前:", logs[index]["bean_name"])
+    print("湯量(g):", logs[index]["water_g"])
+    print("豆の量(g):", logs[index]["dose_g"])
+    print("スコア(1~5点):", logs[index]["overall_score"])
     print("---------")
 
-logs = load_logs()
+def no_records():
+    print("記録がありません。")
 
+def print_invalid_input():
+    print("正しい値を入力してください。")
+
+logs = load_logs()
 
 while True:
     print("1: ログ一覧")
@@ -43,18 +50,18 @@ while True:
     print("3: ログを追加")
     print("4: 終了")
 
-    choice = input("選んでください: ")
+    choice = input("メニューを選んでください。: ")
     if choice == "1":
-    		if len(logs) == 0:
-    			print("表示する項目がありません。")
-    			continue
+        if len(logs) == 0:
+            no_records()
+            continue
         list_logs(logs)
     elif choice == "2":
         if len(logs) == 0:
-            print("記録がありません。")
+            no_records()
             continue
         list_logs(logs)
-        index_text = input("見たい番号を入力してください: ")
+        index_text = input("見たい番号を入力してください。: ")
         if index_text.isdecimal():
             index = int(index_text)
             internal_index = index - 1 
@@ -67,27 +74,45 @@ while True:
 
     elif choice == "3":
         print("追加する項目を入力してください。")
-        bean_name = input("bean_name: ")
+        bean_name = input("豆の名前: ")
         
-        water_g = input("water_g: ")
+        bean_name = bean_name.strip()
+        if bean_name == "":
+            print_invalid_input()
+            continue
+        
+        water_g = input("湯量(1g 以上): ")
+        water_g = water_g.strip()
         if water_g.isdecimal():
             water_g = int(water_g)
+            if water_g < 1:
+                print_invalid_input()
+                continue
+
         else:
-            print("数字を入力してください。")
+            print_invalid_input()
             continue
 
-        dose_g = input("dose_g: ")
+        dose_g = input("豆の量(1g 以上): ")
+        dose_g = dose_g.strip()
         if dose_g.isdecimal():
             dose_g = int(dose_g)
+            if dose_g < 1:
+                print_invalid_input()
+                continue
         else:
-            print("数字を入力してください。")
+            print_invalid_input()
             continue
 
-        overall_score = input("overall_score: ")
+        overall_score = input("スコア(1~5点): ")
+        overall_score = overall_score.strip()
         if overall_score.isdecimal():
             overall_score = int(overall_score)
+            if overall_score < 1 or overall_score > 5:
+                print_invalid_input()
+                continue
         else:
-            print("数字を入力してください。")
+            print_invalid_input()
             continue
 
         log = make_log(bean_name, water_g, dose_g, overall_score)
@@ -98,4 +123,3 @@ while True:
         break
     else:
         print("1, 2, 3, 4のうちいずれかを入力してください。")
-        
